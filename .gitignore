@@ -1,0 +1,7 @@
+*.elf
+*.exe
+*.nds
+*.out
+*.sublime-*
+build
+copy.sh
