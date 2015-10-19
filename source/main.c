@@ -31,37 +31,10 @@ int main(void) {
         return 1;
     } else {
         iprintf("[*] Connected!\n");
-#endif
-        int servfd = socket(PF_INET, SOCK_STREAM, 0);
-        if (servfd == -1) {
-            iprintf("[!] Could not create socket!");
-            return 1;
-        }
 
-        struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(HTTP_PORT);
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-        if (bind(servfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-            closesocket(servfd);
-            iprintf("[!] Could not bind to port %d!", HTTP_PORT);
-            return 1;
-        }
-
-        if (listen(servfd, 10) == -1) {
-            closesocket(servfd);
-            iprintf("[!] Could not listen on socket!");
-            return 1;
-        }
-
-        iprintf("[*] Listening on %s:%d...\n", inet_ntoa(addr.sin_addr), HTTP_PORT);
-
-        for (;;) accept_client(servfd);
-#ifdef ARM9
+        return http_server(HTTP_PORT);
     }
+#else
+    return http_server(HTTP_PORT);
 #endif
-
-    return 0;
 }

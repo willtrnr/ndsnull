@@ -20,6 +20,7 @@
 #include "common.h"
 #include "client.h"
 
+int http_server(int port);
 void accept_client(int sockfd);
 void process_request(int sockfd, const char* method, const char* request, const char* body, int bodylen);
 

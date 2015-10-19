@@ -17,7 +17,8 @@
 #include "http.h"
 #include "common.h"
 
-int http_request(const char* host, const char* request, const char* body, int bodylen, char** resp, int* resplen);
+int http_request(const char* method, const char* host, const char* request, const char* body, int bodylen, char** resp, int* resplen);
+int http_get(const char* host, const char* request, char** resp, int* resplen);
 
 void send_request(int sockfd, const char* method, const char* request);
 

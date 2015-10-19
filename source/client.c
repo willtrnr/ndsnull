@@ -57,6 +57,10 @@ int http_request(const char* method, const char* host, const char* request, cons
     return status;
 }
 
+int http_get(const char* host, const char* request, char** resp, int* resplen) {
+    return http_request(GET, host, request, NULL, 0, resp, resplen);
+}
+
 void send_request(int sockfd, const char* method, const char* request) {
     char* msg = (char*)malloc(1024);
     sprintf(msg, "%s %s HTTP/1.0\r\n", method, request);

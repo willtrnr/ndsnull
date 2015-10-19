@@ -1,5 +1,34 @@
 #include "server.h"
 
+int http_server(int port) {
+    int servfd = socket(PF_INET, SOCK_STREAM, 0);
+    if (servfd == -1) {
+        iprintf("[!] Could not create socket!");
+        return 1;
+    }
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(HTTP_PORT);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(servfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        closesocket(servfd);
+        iprintf("[!] Could not bind to port %d!", HTTP_PORT);
+        return 1;
+    }
+
+    if (listen(servfd, 10) == -1) {
+        closesocket(servfd);
+        iprintf("[!] Could not listen on socket!");
+        return 1;
+    }
+
+    iprintf("[*] Listening on %s:%d...\n", inet_ntoa(addr.sin_addr), HTTP_PORT);
+    for (;;) accept_client(servfd);
+}
+
 void accept_client(int sockfd) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -77,15 +106,22 @@ void process_request(int sockfd, const char* method, const char* request, const 
         } else if (strcmp(request, "/google") == 0) {
             char* resp = NULL;
             int resplen = 0;
-            int status = http_request("www.google.ca", "/", NULL, 0, &resp, &resplen);
+            int status = http_get("www.google.ca", "/", &resp, &resplen);
             send_status(sockfd, status);
             send_body(sockfd, resp, resplen);
             free(resp);
             iprintf("[>] %d GET %s\n", status, request);
         } else {
-            send_status(sockfd, NOT_FOUND);
-            send_body(sockfd, NULL, 0);
-            iprintf("[>] 404 GET %s\n", request);
+            // send_status(sockfd, NOT_FOUND);
+            // send_body(sockfd, NULL, 0);
+            // iprintf("[>] 404 GET %s\n", request);
+            char* resp = NULL;
+            int resplen = 0;
+            int status = http_get("www.google.ca", request, &resp, &resplen);
+            send_status(sockfd, status);
+            send_body(sockfd, resp, resplen);
+            free(resp);
+            iprintf("[>] %d GET %s\n", status, request);
         }
     } else if (strcmp(method, POST) == 0) {
         if (strcmp(request, "/") == 0) {
