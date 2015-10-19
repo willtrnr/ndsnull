@@ -4,7 +4,7 @@
 #define INDEX "<!DOCTYPE html>\
 <html>\
 <head>\
-  <title>Coveo Tester</title>\
+  <title>Tester</title>\
 </head>\
 <body>\
   <form action=\"/\" method=\"post\">\
