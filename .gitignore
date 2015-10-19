@@ -5,3 +5,4 @@
 *.sublime-*
 build
 copy.sh
+include/payload.h
