@@ -45,26 +45,21 @@ int http_request(const char* method, const char* host, const char* request, cons
             free(key);
             free(value);
 
+            int read = 0;
             if (*resplen > 0) {
+                int offset = 0;
                 *resp = (char*)malloc(*resplen + 1);
-                *resplen = recv(sockfd, *resp, *resplen, 0);
-                (*resp)[*resplen] = 0;
-            } else {
-                int read = 0;
-                *resplen = 0;
-                *resp = (char*)malloc(1024);
-                while ((read = recv(sockfd, &(*resp)[*resplen], 1024, 0)) > 0) {
-                    *resplen += read;
-                    *resp = (char*)realloc(*resp, *resplen + 1024);
-                    if (*resp == NULL) {
-                        status = 0;
-                        *resplen = 0;
-                        break;
-                    }
+                while (offset < *resplen && (read = recv(sockfd, &(*resp)[offset], *resplen - offset, 0)) >= 0) {
+                    offset += read;
                 }
-                if (*resp != NULL) {
-                    *resp = (char*)realloc(*resp, *resplen + 1);
+                (*resp)[offset] = 0;
+                *resplen = offset;
+            } else {
+                *resp = (char*)malloc(1025);
+                while (*resp != NULL && (read = recv(sockfd, &(*resp)[*resplen], 1024, 0)) > 0) {
+                    *resplen += read;
                     (*resp)[*resplen] = 0;
+                    *resp = (char*)realloc(*resp, *resplen + 1025);
                 }
             }
         }

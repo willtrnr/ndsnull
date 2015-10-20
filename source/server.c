@@ -29,13 +29,13 @@ int http_server(int port) {
     for (;;) accept_client(servfd);
 }
 
-void accept_client(int sockfd) {
+void accept_client(int servfd) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     int addrlen = 0;
-    int clientfd = accept(sockfd, (struct sockaddr*)&addr, &addrlen);
-    if (clientfd == -1) {
+    int sockfd = accept(servfd, (struct sockaddr*)&addr, &addrlen);
+    if (sockfd == -1) {
         iprintf("[!] Could not accept client!\n");
         return;
     }
@@ -43,7 +43,7 @@ void accept_client(int sockfd) {
     iprintf("[<] Client connected: %s\n", inet_ntoa(addr.sin_addr));
 
     char* line = (char*)malloc(1024 * 4);
-    if (get_line(clientfd, line, 1024) > 0) {
+    if (get_line(sockfd, line, 1024) > 0) {
         char* method = (char*)malloc(16);
         char* request = (char*)malloc(256);
         char* version = (char*)malloc(16);
@@ -51,7 +51,7 @@ void accept_client(int sockfd) {
             int bodylen = 0;
             char* key = (char*)malloc(32);
             char* value = (char*)malloc(128);
-            while (get_line(clientfd, line, 1024 * 4) > 2) {
+            while (get_line(sockfd, line, 1024 * 4) > 2) {
                 if (sscanf(line, "%31[^:]: %127s", key, value) > 0) {
                     if (strcmp(key, CONTENT_LENGTH) == 0) {
                         sscanf(value, "%d", &bodylen);
@@ -62,22 +62,27 @@ void accept_client(int sockfd) {
             free(value);
 
             if (bodylen > MAX_BODY_SIZE) {
-                send_status(clientfd, REQUEST_ENTITY_TOO_LARGE);
-                send_body(clientfd, NULL, 0);
+                send_status(sockfd, REQUEST_ENTITY_TOO_LARGE);
+                send_body(sockfd, NULL, 0);
                 iprintf("[>] %d\n", REQUEST_ENTITY_TOO_LARGE);
             } else {
                 char* body = NULL;
                 if (bodylen > 0) {
+                    int read = 0;
+                    int offset = 0;
                     body = (char*)malloc(bodylen + 1);
-                    bodylen = recv(clientfd, body, bodylen, 0);
-                    body[bodylen] = 0;
+                    while (offset < bodylen && (read = recv(sockfd, &body[offset], bodylen - offset, 0)) >= 0) {
+                        offset += read;
+                    }
+                    body[offset] = 0;
+                    bodylen = offset;
                 }
-                process_request(clientfd, method, request, body, bodylen);
+                process_request(sockfd, method, request, body, bodylen);
                 free(body);
             }
         } else {
-            send_status(clientfd, BAD_REQUEST);
-            send_body(clientfd, NULL, 0);
+            send_status(sockfd, BAD_REQUEST);
+            send_body(sockfd, NULL, 0);
             iprintf("[>] %d\n", BAD_REQUEST);
         }
 
@@ -85,14 +90,14 @@ void accept_client(int sockfd) {
         free(request);
         free(version);
     } else {
-        send_status(clientfd, BAD_REQUEST);
-        send_body(clientfd, NULL, 0);
+        send_status(sockfd, BAD_REQUEST);
+        send_body(sockfd, NULL, 0);
         iprintf("[>] %d\n", BAD_REQUEST);
     }
     free(line);
 
-    shutdown(clientfd, SHUT_RDWR);
-    closesocket(clientfd);
+    shutdown(sockfd, SHUT_RDWR);
+    closesocket(sockfd);
 }
 
 void process_request(int sockfd, const char* method, const char* request, const char* body, int bodylen) {
