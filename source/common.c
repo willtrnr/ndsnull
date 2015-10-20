@@ -37,7 +37,6 @@ void send_body(int sockfd, const const char* body, int len) {
     }
     send_header(sockfd, CONNECTION, "close");
     send(sockfd, "\r\n", 2, 0);
-
     int sent = 0;
     int offset = 0;
     while (offset < len && (sent = send(sockfd, &body[offset], len - offset, 0)) >= 0) {
