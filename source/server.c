@@ -127,14 +127,12 @@ void process_request(int sockfd, const char* method, const char* request, const 
             int firstNumber = 0;
             int secondNumber = 0;
             sscanf(body, "firstNumber=%d&secondNumber=%d", &firstNumber, &secondNumber);
-
             send_status(sockfd, OK);
             send_header(sockfd, CONTENT_TYPE, "application/json");
             char* msg = (char*)malloc(sizeof(PAYLOAD) + 32);
             sprintf(msg, PAYLOAD, firstNumber + secondNumber);
             send_body(sockfd, msg, strlen(msg));
             free(msg);
-
             iprintf("[>] %d POST %s\n", OK, request);
         } else {
             send_status(sockfd, NOT_FOUND);
