@@ -22,7 +22,7 @@ int get_line(int sockfd, char* buf, int len) {
 }
 
 void send_header(int sockfd, const char* key, const char* value) {
-    char* msg = (char*)malloc(256);
+    char* msg = (char*)malloc(1024);
     sprintf(msg, "%s: %s\r\n", key, value);
     send(sockfd, msg, strlen(msg), 0);
     free(msg);
