@@ -33,17 +33,39 @@ int http_request(const char* method, const char* host, const char* request, cons
         char* status_text = (char*)malloc(128);
         if (sscanf(line, "%15s %d %127s", version, &status, status_text) == 3 && resp != NULL && resplen != NULL) {
             *resplen = 0;
-            while (get_line(sockfd, line, 1024 * 4) > 2);
-
-            int i = 0;
-            *resp = (char*)malloc(1024);
-            while ((i = recv(sockfd, &(*resp)[*resplen], 1024, 0)) > 0) {
-                *resplen += i;
-                char* ex = (char*)realloc(*resp, *resplen + 1024);
-                if (ex == NULL) {
-                    break;
+            char* key = (char*)malloc(32);
+            char* value = (char*)malloc(128);
+            while (get_line(sockfd, line, 1024 * 4) > 2) {
+                if (sscanf(line, "%31[^:]: %127s", key, value) > 0) {
+                    if (strcmp(key, CONTENT_LENGTH) == 0) {
+                        sscanf(value, "%d", resplen);
+                    }
                 }
-                *resp = ex;
+            }
+            free(key);
+            free(value);
+
+            if (*resplen > 0) {
+                *resp = (char*)malloc(*resplen + 1);
+                *resplen = recv(sockfd, *resp, *resplen, 0);
+                (*resp)[*resplen] = 0;
+            } else {
+                int read = 0;
+                *resplen = 0;
+                *resp = (char*)malloc(1024);
+                while ((read = recv(sockfd, &(*resp)[*resplen], 1024, 0)) > 0) {
+                    *resplen += read;
+                    *resp = (char*)realloc(*resp, *resplen + 1024);
+                    if (*resp == NULL) {
+                        status = 0;
+                        *resplen = 0;
+                        break;
+                    }
+                }
+                if (*resp != NULL) {
+                    *resp = (char*)realloc(*resp, *resplen + 1);
+                    (*resp)[*resplen] = 0;
+                }
             }
         }
         free(version);

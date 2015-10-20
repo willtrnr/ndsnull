@@ -64,22 +64,21 @@ void accept_client(int sockfd) {
             if (bodylen > MAX_BODY_SIZE) {
                 send_status(clientfd, REQUEST_ENTITY_TOO_LARGE);
                 send_body(clientfd, NULL, 0);
-                iprintf("[>] 400\n");
+                iprintf("[>] %d\n", REQUEST_ENTITY_TOO_LARGE);
             } else {
                 char* body = NULL;
                 if (bodylen > 0) {
-                    body = (char*)malloc(bodylen);
+                    body = (char*)malloc(bodylen + 1);
                     bodylen = recv(clientfd, body, bodylen, 0);
+                    body[bodylen] = 0;
                 }
-
                 process_request(clientfd, method, request, body, bodylen);
-
                 free(body);
             }
         } else {
             send_status(clientfd, BAD_REQUEST);
             send_body(clientfd, NULL, 0);
-            iprintf("[>] 400\n");
+            iprintf("[>] %d\n", BAD_REQUEST);
         }
 
         free(method);
@@ -88,7 +87,7 @@ void accept_client(int sockfd) {
     } else {
         send_status(clientfd, BAD_REQUEST);
         send_body(clientfd, NULL, 0);
-        iprintf("[>] 400\n");
+        iprintf("[>] %d\n", BAD_REQUEST);
     }
     free(line);
 
@@ -102,7 +101,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
             send_status(sockfd, OK);
             send_header(sockfd, CONTENT_TYPE, "text/html");
             send_body(sockfd, INDEX, sizeof(INDEX));
-            iprintf("[>] 200 GET %s\n", request);
+            iprintf("[>] %d GET %s\n", OK, request);
         } else if (strcmp(request, "/google") == 0) {
             char* resp = NULL;
             int resplen = 0;
@@ -125,56 +124,57 @@ void process_request(int sockfd, const char* method, const char* request, const 
         }
     } else if (strcmp(method, POST) == 0) {
         if (strcmp(request, "/") == 0) {
-            send_status(sockfd, OK);
-            send_header(sockfd, CONTENT_TYPE, "application/json");
-
             int firstNumber = 0;
             int secondNumber = 0;
             sscanf(body, "firstNumber=%d&secondNumber=%d", &firstNumber, &secondNumber);
 
+            send_status(sockfd, OK);
+            send_header(sockfd, CONTENT_TYPE, "application/json");
             char* msg = (char*)malloc(sizeof(PAYLOAD) + 32);
             sprintf(msg, PAYLOAD, firstNumber + secondNumber);
             send_body(sockfd, msg, strlen(msg));
             free(msg);
 
-            iprintf("[>] 200 POST %s\n", request);
+            iprintf("[>] %d POST %s\n", OK, request);
         } else {
             send_status(sockfd, NOT_FOUND);
             send_body(sockfd, NULL, 0);
-            iprintf("[>] 404 GET %s\n", request);
+            iprintf("[>] %d GET %s\n", NOT_FOUND, request);
         }
     } else {
         send_status(sockfd, NOT_IMPLEMENTED);
         send_body(sockfd, NULL, 0);
-        iprintf("[>] 501 %s %s\n", method, request);
+        iprintf("[>] %d %s %s\n", NOT_IMPLEMENTED, method, request);
     }
 }
 
 void send_status(int sockfd, int status) {
+    if (status == 0) {
+        status = INTERNAL_SERVER_ERROR;
+    }
     char* msg = (char*)malloc(64);
-    strcpy(msg, "HTTP/1.0 ");
+    sprintf(msg, "HTTP/1.0 %d ", status);
     switch (status) {
         case OK:
-            strcat(msg, "200 OK");
+            strcat(msg, "OK");
             break;
         case CONTINUE:
-            strcat(msg, "201 Continue");
+            strcat(msg, "Continue");
             break;
         case BAD_REQUEST:
-            strcat(msg, "400 Bad Request");
+            strcat(msg, "Bad Request");
             break;
         case NOT_FOUND:
-            strcat(msg, "404 Not Found");
+            strcat(msg, "Not Found");
             break;
         case REQUEST_ENTITY_TOO_LARGE:
-            strcat(msg, "431 Request Entity Too Large");
+            strcat(msg, "Request Entity Too Large");
             break;
-        case 0:
         case INTERNAL_SERVER_ERROR:
-            strcat(msg, "500 Internal Server Error");
+            strcat(msg, "Internal Server Error");
             break;
         case NOT_IMPLEMENTED:
-            strcat(msg, "501 Not Implemented");
+            strcat(msg, "Not Implemented");
             break;
     }
     strcat(msg, "\r\n");
