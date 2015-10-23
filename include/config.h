@@ -3,6 +3,6 @@
 
 #define HTTP_PORT 8080
 
-#define MAX_BODY_SIZE 1024 * 8
+#define MAX_BODY_SIZE 1024 * 1024
 
 #endif

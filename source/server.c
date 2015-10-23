@@ -10,12 +10,12 @@ int http_server(int port) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(HTTP_PORT);
+    addr.sin_port = htons(port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(servfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         closesocket(servfd);
-        iprintf("[!] Could not bind to port %d!", HTTP_PORT);
+        iprintf("[!] Could not bind to port %d!", port);
         return 1;
     }
 
@@ -25,7 +25,7 @@ int http_server(int port) {
         return 1;
     }
 
-    iprintf("[*] Listening on %s:%d...\n", inet_ntoa(addr.sin_addr), HTTP_PORT);
+    iprintf("[*] Listening on %s:%d...\n", inet_ntoa(addr.sin_addr), port);
     for (;;) accept_client(servfd);
 }
 
@@ -107,42 +107,51 @@ void process_request(int sockfd, const char* method, const char* request, const 
             send_header(sockfd, CONTENT_TYPE, "text/html");
             send_body(sockfd, INDEX, sizeof(INDEX));
             iprintf("[>] %d GET %s\n", OK, request);
-        } else if (strcmp(request, "/google") == 0) {
-            char* resp = NULL;
-            int resplen = 0;
-            int status = http_get("www.google.ca", "/", &resp, &resplen);
-            send_status(sockfd, status);
-            send_body(sockfd, resp, resplen);
-            free(resp);
-            iprintf("[>] %d GET %s\n", status, request);
-        } else {
-            // send_status(sockfd, NOT_FOUND);
-            // send_body(sockfd, NULL, 0);
-            // iprintf("[>] 404 GET %s\n", request);
-            char* resp = NULL;
-            int resplen = 0;
-            int status = http_get("www.google.ca", request, &resp, &resplen);
-            send_status(sockfd, status);
-            send_body(sockfd, resp, resplen);
-            free(resp);
-            iprintf("[>] %d GET %s\n", status, request);
-        }
-    } else if (strcmp(method, POST) == 0) {
-        if (strcmp(request, "/") == 0) {
-            int firstNumber = 0;
-            int secondNumber = 0;
-            sscanf(body, "firstNumber=%d&secondNumber=%d", &firstNumber, &secondNumber);
-            send_status(sockfd, OK);
-            send_header(sockfd, CONTENT_TYPE, "application/json");
-            char* msg = (char*)malloc(sizeof(PAYLOAD) + 32);
-            sprintf(msg, PAYLOAD, firstNumber + secondNumber);
-            send_body(sockfd, msg, strlen(msg));
-            free(msg);
-            iprintf("[>] %d POST %s\n", OK, request);
         } else {
             send_status(sockfd, NOT_FOUND);
             send_body(sockfd, NULL, 0);
             iprintf("[>] %d GET %s\n", NOT_FOUND, request);
+        }
+    } else if (strcmp(method, POST) == 0) {
+        if (strcmp(request, "/") == 0) {
+            char* resp = NULL;
+            int resplen = 0;
+            int status = http_request(POST, "172.16.0.211", "/challenge", body, bodylen, &resp, &resplen);
+
+            char* p;
+            for (p = resp; *p; ++p) *p = *p > 0x40 && *p < 0x5b ? *p | 0x60 : *p;
+            char* msg = (char*)malloc(sizeof(PAYLOAD) + resplen - 2);
+            sprintf(msg, PAYLOAD, resp);
+            free(resp);
+
+            send_status(sockfd, status);
+            send_body(sockfd, msg, strlen(msg));
+            free(msg);
+            iprintf("[>] %d POST %s\n", OK, request);
+        } else if (strcmp(request, "/challenge") == 0) {
+            json_value* val = json_parse(body, bodylen);
+            json_value* arr = json_array_new(0);
+            int i;
+            for (i = 0; i < val->u.object.values[1].value->u.object.length; ++i) {
+                int p = 0;
+                sscanf(val->u.object.values[1].value->u.object.values[i].name, "%d", &p);
+                if (strstr(val->u.object.values[1].value->u.object.values[i].value->u.string.ptr, val->u.object.values[0].value->u.string.ptr) != NULL) {
+                    json_array_push(arr, json_integer_new(p));
+                }
+            }
+            json_value_free(val);
+
+            char* buf = malloc(json_measure(arr));
+            json_serialize(buf, arr);
+
+            send_status(sockfd, OK);
+            send_body(sockfd, buf, json_measure(arr));
+            json_value_free(arr);
+            iprintf("[>] %d POST %s\n", OK, request);
+        } else {
+            send_status(sockfd, NOT_FOUND);
+            send_body(sockfd, NULL, 0);
+            iprintf("[>] %d POST %s\n", NOT_FOUND, request);
         }
     } else {
         send_status(sockfd, NOT_IMPLEMENTED);

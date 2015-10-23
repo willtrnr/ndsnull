@@ -4,7 +4,7 @@ int http_request(const char* method, const char* host, const char* request, cons
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(80);
+    addr.sin_port = htons(HTTP_PORT);
     if (inet_aton(host, &addr.sin_addr) == 0) {
         struct hostent* he = gethostbyname(host);
         if (he == NULL) {

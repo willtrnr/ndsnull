@@ -21,6 +21,6 @@
 </body>\
 </html>"
 
-#define PAYLOAD "%d"
+#define PAYLOAD "%s"
 
 #endif

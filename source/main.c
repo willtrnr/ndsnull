@@ -18,23 +18,27 @@
 #include "server.h"
 #include "client.h"
 
-int main(void) {
 #ifdef ARM9
-    consoleDemoInit();
+    int main(void) {
+        consoleDemoInit();
 
-    iprintf("/nds/null Web Server v4.2.0\n");
-    iprintf("--------------------------------");
+        iprintf("/nds/null Web Server v4.2.0\n");
+        iprintf("--------------------------------");
 
-    iprintf("[*] Connecting...\n");
-    if (!Wifi_InitDefault(WFC_CONNECT)) {
-        iprintf("[!] Failed to connect!");
-        return 1;
-    } else {
-        iprintf("[*] Connected!\n");
+        iprintf("[*] Connecting...\n");
+        if (!Wifi_InitDefault(WFC_CONNECT)) {
+            iprintf("[!] Failed to connect!");
+            return 1;
+        } else {
+            iprintf("[*] Connected!\n");
 
-        return http_server(HTTP_PORT);
+            return http_server(HTTP_PORT);
+        }
     }
 #else
-    return http_server(HTTP_PORT);
+    int main(int argc, char** argv) {
+        int port = HTTP_PORT;
+        sscanf(argv[1], "%d", &port);
+        return http_server(port);
+    }
 #endif
-}

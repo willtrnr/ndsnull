@@ -19,6 +19,8 @@
 #include "payload.h"
 #include "common.h"
 #include "client.h"
+#include "json.h"
+#include "json-builder.h"
 
 int http_server(int port);
 void accept_client(int sockfd);
