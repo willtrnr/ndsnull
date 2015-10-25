@@ -44,7 +44,7 @@ void send_body(int sockfd, const const char* body, int len) {
     }
 
     #ifdef TCP_CORK
-        if (setsockopt(servfd, SOL_TCP, TCP_CORK, &(int){ 0 }, sizeof(int)) < 0) {
+        if (setsockopt(sockfd, SOL_TCP, TCP_CORK, &(int){ 0 }, sizeof(int)) < 0) {
             iprintf("[!] Could not unset cork option!");
         }
     #endif
