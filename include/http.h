@@ -60,9 +60,14 @@
 
 // HTTP Headers
 #define CONNECTION "Connection"
+#define CONNECTION_ "connection"
 #define CONTENT_LENGTH "Content-Length"
+#define CONTENT_LENGTH_ "content-length"
 #define CONTENT_TYPE "Content-Type"
+#define CONTENT_TYPE_ "content-type"
 #define HOST "Host"
+#define HOST_ "host"
 #define SERVER "Server"
+#define SERVER_ "server"
 
 #endif

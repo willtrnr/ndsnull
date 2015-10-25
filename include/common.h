@@ -22,6 +22,8 @@
     #define closesocket(fd) close(fd)
 #endif
 
+int lowercase(const char* from, char* buf);
+
 int get_line(int sockfd, char* buf, int len);
 
 void send_header(int sockfd, const char* key, const char* value);

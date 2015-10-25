@@ -1,5 +1,22 @@
 #include "common.h"
 
+int lowercase(const char* from, char* buf) {
+    if (from == NULL) {
+        char* c;
+        for (c = buf; *c; ++c) {
+            *c = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
+        }
+        return c - buf;
+    } else {
+        const char* c;
+        for (c = from; *c; ++c) {
+            buf[c - from] = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
+        }
+        buf[c - from] = 0;
+        return c - from;
+    }
+}
+
 int get_line(int sockfd, char* buf, int len) {
     int i = 0;
     char c = 0;
