@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#ifdef ARM9
+#ifdef NDS
     #include <nds.h>
 #else
     #include <stdlib.h>
@@ -17,7 +17,7 @@
 
 #include "http.h"
 
-#ifndef ARM9
+#ifndef NDS
     #define iprintf(...) printf(__VA_ARGS__)
     #define closesocket(fd) close(fd)
 #endif

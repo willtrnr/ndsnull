@@ -1,7 +1,7 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#ifdef ARM9
+#ifdef NDS
     #include <nds.h>
 #else
     #include <stdlib.h>

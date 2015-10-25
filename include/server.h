@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#ifdef ARM9
+#ifdef NDS
     #include <nds.h>
 #else
     #include <stdlib.h>

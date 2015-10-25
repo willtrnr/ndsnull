@@ -1,4 +1,4 @@
-#ifdef ARM9
+#ifdef NDS
     #include <nds.h>
     #include <dswifi9.h>
 #else
@@ -18,7 +18,7 @@
 #include "server.h"
 #include "client.h"
 
-#ifdef ARM9
+#ifdef NDS
     int main(void) {
         consoleDemoInit();
 
@@ -38,7 +38,9 @@
 #else
     int main(int argc, char** argv) {
         int port = HTTP_PORT;
-        sscanf(argv[1], "%d", &port);
+        if (argc > 1) {
+            sscanf(argv[argc - 1], "%d", &port);
+        }
         return http_server(port);
     }
 #endif
