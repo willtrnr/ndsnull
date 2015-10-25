@@ -23,7 +23,7 @@ int http_request(const char* method, const char* host, const char* request, cons
     }
 
     #ifdef TCP_CORK
-        if (setsockopt(servfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {
+        if (setsockopt(sockfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {
             iprintf("[!] Could not set cork option!");
         }
     #endif
