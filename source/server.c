@@ -140,19 +140,23 @@ void process_request(int sockfd, const char* method, const char* request, const 
         }
     } else if (strcmp(method, POST) == 0) {
         if (strcmp(request, "/") == 0) {
+            char* buf = (char*)malloc(bodylen);
+
+            const char* p;
+            for (p = body; *p; ++p) buf[p - body] = *p > 0x40 && *p < 0x5b ? *p | 0x60 : *p;
+            buf[bodylen] = 0;
+
             char* resp = NULL;
             int resplen = 0;
-            int status = http_request(POST, "172.16.0.211", "/challenge", body, bodylen, &resp, &resplen);
+            int status = http_request(POST, "172.16.0.211", "/challenge", buf, bodylen, &resp, &resplen);
 
-            char* p;
-            for (p = resp; *p; ++p) *p = *p > 0x40 && *p < 0x5b ? *p | 0x60 : *p;
-            char* msg = (char*)malloc(sizeof(PAYLOAD) + resplen - 2);
-            sprintf(msg, PAYLOAD, resp);
-            free(resp);
-
+            buf = (char*)realloc(buf, sizeof(PAYLOAD) + resplen);
+            sprintf(buf, PAYLOAD, resp);
             send_status(sockfd, OK);
-            send_body(sockfd, msg, strlen(msg));
-            free(msg);
+            send_body(sockfd, buf, strlen(buf));
+
+            free(resp);
+            free(buf);
             iprintf("[>] %d POST %s\n", OK, request);
         } else if (strcmp(request, "/challenge") == 0) {
             json_value* val = json_parse(body, bodylen);
