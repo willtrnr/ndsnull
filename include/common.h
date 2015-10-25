@@ -22,7 +22,8 @@
     #define closesocket(fd) close(fd)
 #endif
 
-int lowercase(const char* from, char* buf);
+int lowercase(char* buf);
+int lowercase_cpy(char* dst, const char* src);
 
 int get_line(int sockfd, char* buf, int len);
 

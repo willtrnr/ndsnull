@@ -1,20 +1,20 @@
 #include "common.h"
 
-int lowercase(const char* from, char* buf) {
-    if (from == NULL) {
-        char* c;
-        for (c = buf; *c; ++c) {
-            *c = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
-        }
-        return c - buf;
-    } else {
-        const char* c;
-        for (c = from; *c; ++c) {
-            buf[c - from] = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
-        }
-        buf[c - from] = 0;
-        return c - from;
+int lowercase(char* buf) {
+    char* c;
+    for (c = buf; *c; ++c) {
+        *c = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
     }
+    return c - buf;
+}
+
+int lowercase_cpy(char* dst, const char* src) {
+    const char* c;
+    for (c = src; *c; ++c) {
+        dst[c - src] = *c > 0x40 && *c < 0x5b ? *c | 0x60 : *c;
+    }
+    dst[c - src] = 0;
+    return c - src;
 }
 
 int get_line(int sockfd, char* buf, int len) {

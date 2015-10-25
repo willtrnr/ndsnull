@@ -79,7 +79,7 @@ void accept_client(int servfd) {
             char* value = (char*)malloc(128);
             while (get_line(sockfd, line, 1024 * 4) > 2) {
                 if (sscanf(line, "%31[^:]: %127s", key, value) > 0) {
-                    lowercase(NULL, key);
+                    lowercase(key);
                     if (strcmp(key, CONTENT_LENGTH_) == 0) {
                         sscanf(value, "%d", &bodylen);
                     }
@@ -142,7 +142,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
     } else if (strcmp(method, POST) == 0) {
         if (strcmp(request, "/") == 0) {
             char* buf = (char*)malloc(bodylen);
-            lowercase(body, buf);
+            lowercase_cpy(buf, body);
 
             char* resp = NULL;
             int resplen = 0;
