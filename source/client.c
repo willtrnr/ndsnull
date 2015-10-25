@@ -14,10 +14,27 @@ int http_request(const char* method, const char* host, const char* request, cons
     }
 
     int sockfd = socket(PF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
+    if (sockfd < 0) {
         return 0;
     }
-    if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+
+    if (setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
+        iprintf("[!] Could not set nodelay option!");
+    }
+
+    #ifdef TCP_CORK
+        if (setsockopt(servfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set cork option!");
+        }
+    #endif
+
+    #ifdef TCP_QUICKACK
+        if (setsockopt(sockfd, SOL_TCP, TCP_QUICKACK, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set cork option!");
+        }
+    #endif
+
+    if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         closesocket(sockfd);
         return 0;
     }

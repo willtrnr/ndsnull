@@ -2,10 +2,36 @@
 
 int http_server(int port) {
     int servfd = socket(PF_INET, SOCK_STREAM, 0);
-    if (servfd == -1) {
+    if (servfd < 0) {
         iprintf("[!] Could not create socket!");
         return 1;
     }
+
+    if (setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+        iprintf("[!] Could not set reuse option!");
+    }
+
+    if (setsockopt(servfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
+        iprintf("[!] Could not set nodelay option!");
+    }
+
+    #ifdef TCP_CORK
+        if (setsockopt(servfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set cork option!");
+        }
+    #endif
+
+    #ifdef TCP_DEFER_ACCEPT
+        if (setsockopt(servfd, SOL_TCP, TCP_DEFER_ACCEPT, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set defer option!");
+        }
+    #endif
+
+    #ifdef TCP_QUICKACK
+        if (setsockopt(servfd, SOL_TCP, TCP_QUICKACK, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set cork option!");
+        }
+    #endif
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -13,13 +39,13 @@ int http_server(int port) {
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(servfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    if (bind(servfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         closesocket(servfd);
         iprintf("[!] Could not bind to port %d!", port);
         return 1;
     }
 
-    if (listen(servfd, 10) == -1) {
+    if (listen(servfd, 10) < 0) {
         closesocket(servfd);
         iprintf("[!] Could not listen on socket!");
         return 1;
@@ -35,7 +61,7 @@ void accept_client(int servfd) {
     addr.sin_family = AF_INET;
     int addrlen = 0;
     int sockfd = accept(servfd, (struct sockaddr*)&addr, &addrlen);
-    if (sockfd == -1) {
+    if (sockfd < 0) {
         iprintf("[!] Could not accept client!\n");
         return;
     }
@@ -124,7 +150,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
             sprintf(msg, PAYLOAD, resp);
             free(resp);
 
-            send_status(sockfd, status);
+            send_status(sockfd, OK);
             send_body(sockfd, msg, strlen(msg));
             free(msg);
             iprintf("[>] %d POST %s\n", OK, request);
@@ -143,10 +169,10 @@ void process_request(int sockfd, const char* method, const char* request, const 
 
             char* buf = malloc(json_measure(arr));
             json_serialize(buf, arr);
+            json_builder_free(arr);
 
             send_status(sockfd, OK);
-            send_body(sockfd, buf, json_measure(arr));
-            json_value_free(arr);
+            send_body(sockfd, buf, strlen(buf));
             iprintf("[>] %d POST %s\n", OK, request);
         } else {
             send_status(sockfd, NOT_FOUND);
