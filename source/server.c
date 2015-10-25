@@ -148,7 +148,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
 
             char* resp = NULL;
             int resplen = 0;
-            int status = http_request(POST, "172.16.0.211", "/challenge", buf, bodylen, &resp, &resplen);
+            int status = http_request(POST, "127.0.0.1", "/challenge", buf, bodylen, &resp, &resplen);
 
             buf = (char*)realloc(buf, sizeof(PAYLOAD) + resplen);
             sprintf(buf, PAYLOAD, resp);
