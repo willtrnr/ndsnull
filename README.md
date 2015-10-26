@@ -8,8 +8,6 @@ The bare minimum is there to comply with HTTP/1.0 (I believe), so it actually wo
 Building
 --------
 
-First of all, copy the include/payload.h.template file to include/payload.h
+If you're building for the Nintendo DS, just run make on the Makefile.nds file (assuming you have DevKitPro in your path, make will complain about it anyway in case it's not there).
 
-Then if you're building for the Nintendo DS, just run make (assuming you have DevKitPro in your path, make will complain about it anyway in case it's not there).
-
-For Linux or Windows (Cygwin), you have to gcc the C files together (sorry, no Makefile, I'm bad at those).
+For Linux or Windows (Cygwin), you have to gcc the C files together (sorry, no Makefile yet, I'm bad at those).
