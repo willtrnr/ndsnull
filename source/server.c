@@ -155,6 +155,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
             buf = (char*)realloc(buf, sizeof(PAYLOAD) + resplen);
             sprintf(buf, PAYLOAD, resp);
             send_status(sockfd, status);
+            send_header(sockfd, CONTENT_TYPE, "application/json");
             send_body(sockfd, buf, strlen(buf));
 
             free(resp);
@@ -175,13 +176,14 @@ void process_request(int sockfd, const char* method, const char* request, const 
                 }
             }
             json_value_free(val);
+            free(buf);
 
             char* msg = malloc(json_measure(arr));
             json_serialize(msg, arr);
             json_builder_free(arr);
-            free(buf);
 
             send_status(sockfd, OK);
+            send_header(sockfd, CONTENT_TYPE, "application/json");
             send_body(sockfd, msg, strlen(msg));
             free(msg);
             iprintf("[>] %d POST %s\n", OK, request);
