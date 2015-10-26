@@ -154,7 +154,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
 
             buf = (char*)realloc(buf, sizeof(PAYLOAD) + resplen);
             sprintf(buf, PAYLOAD, resp);
-            send_status(sockfd, OK);
+            send_status(sockfd, status);
             send_body(sockfd, buf, strlen(buf));
 
             free(resp);
