@@ -1,6 +1,6 @@
 *.elf
 *.exe
-ndsnull.nds
+*.nds
 *.out
 *.sublime-*
 build
