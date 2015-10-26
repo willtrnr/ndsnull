@@ -1,4 +1,4 @@
-POST / HTTP/1.1
+POST /challenge HTTP/1.1
 Host: blitz.thehypeisflowingintothekeyboard.com:8080
 Accept: */*
 Content-Type: application/json

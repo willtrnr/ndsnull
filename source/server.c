@@ -161,7 +161,10 @@ void process_request(int sockfd, const char* method, const char* request, const 
             free(buf);
             iprintf("[>] %d POST %s\n", OK, request);
         } else if (strcmp(request, "/challenge") == 0) {
-            json_value* val = json_parse(body, bodylen);
+            char* buf = (char*)malloc(bodylen);
+            lowercase_cpy(buf, body);
+
+            json_value* val = json_parse(buf, bodylen);
             json_value* arr = json_array_new(0);
             int i;
             for (i = 0; i < val->u.object.values[1].value->u.object.length; ++i) {
@@ -173,12 +176,14 @@ void process_request(int sockfd, const char* method, const char* request, const 
             }
             json_value_free(val);
 
-            char* buf = malloc(json_measure(arr));
-            json_serialize(buf, arr);
+            char* msg = malloc(json_measure(arr));
+            json_serialize(msg, arr);
             json_builder_free(arr);
+            free(buf);
 
             send_status(sockfd, OK);
-            send_body(sockfd, buf, strlen(buf));
+            send_body(sockfd, msg, strlen(msg));
+            free(msg);
             iprintf("[>] %d POST %s\n", OK, request);
         } else {
             send_status(sockfd, NOT_FOUND);
