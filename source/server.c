@@ -145,7 +145,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
         }
     } else if (strcmp(method, POST) == 0) {
         if (strcmp(request, "/") == 0) {
-            char* buf = (char*)malloc(bodylen);
+            char* buf = (char*)malloc(bodylen + 1);
             lowercase_cpy(buf, body);
 
             char* resp = NULL;
@@ -162,7 +162,7 @@ void process_request(int sockfd, const char* method, const char* request, const 
             free(buf);
             iprintf("[>] %d POST %s\n", OK, request);
         } else if (strcmp(request, "/challenge") == 0) {
-            char* buf = (char*)malloc(bodylen);
+            char* buf = (char*)malloc(bodylen + 1);
             lowercase_cpy(buf, body);
 
             json_value* val = json_parse(buf, bodylen);
