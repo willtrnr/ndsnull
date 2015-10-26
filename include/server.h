@@ -17,7 +17,7 @@
 
 #include "config.h"
 #include "http.h"
-#include "payload.h"
+#include "index.h"
 #include "common.h"
 #include "client.h"
 #include "json.h"

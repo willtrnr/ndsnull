@@ -143,55 +143,6 @@ void process_request(int sockfd, const char* method, const char* request, const 
             send_body(sockfd, NULL, 0);
             iprintf("[>] %d GET %s\n", NOT_FOUND, request);
         }
-    } else if (strcmp(method, POST) == 0) {
-        if (strcmp(request, "/") == 0) {
-            char* buf = (char*)malloc(bodylen + 1);
-            lowercase_cpy(buf, body);
-
-            char* resp = NULL;
-            int resplen = 0;
-            int status = http_request(POST, BACKEND_HOST, BACKEND_PATH, buf, bodylen, &resp, &resplen);
-
-            buf = (char*)realloc(buf, sizeof(PAYLOAD) + resplen);
-            sprintf(buf, PAYLOAD, resp);
-            send_status(sockfd, status);
-            send_header(sockfd, CONTENT_TYPE, "application/json");
-            send_body(sockfd, buf, strlen(buf));
-
-            free(resp);
-            free(buf);
-            iprintf("[>] %d POST %s\n", OK, request);
-        } else if (strcmp(request, "/challenge") == 0) {
-            char* buf = (char*)malloc(bodylen + 1);
-            lowercase_cpy(buf, body);
-
-            json_value* val = json_parse(buf, bodylen);
-            json_value* arr = json_array_new(0);
-            int i;
-            for (i = 0; i < val->u.object.values[1].value->u.object.length; ++i) {
-                int p = 0;
-                sscanf(val->u.object.values[1].value->u.object.values[i].name, "%d", &p);
-                if (strstr(val->u.object.values[1].value->u.object.values[i].value->u.string.ptr, val->u.object.values[0].value->u.string.ptr) != NULL) {
-                    json_array_push(arr, json_integer_new(p));
-                }
-            }
-            json_value_free(val);
-            free(buf);
-
-            char* msg = malloc(json_measure(arr));
-            json_serialize(msg, arr);
-            json_builder_free(arr);
-
-            send_status(sockfd, OK);
-            send_header(sockfd, CONTENT_TYPE, "application/json");
-            send_body(sockfd, msg, strlen(msg));
-            free(msg);
-            iprintf("[>] %d POST %s\n", OK, request);
-        } else {
-            send_status(sockfd, NOT_FOUND);
-            send_body(sockfd, NULL, 0);
-            iprintf("[>] %d POST %s\n", NOT_FOUND, request);
-        }
     } else {
         send_status(sockfd, NOT_IMPLEMENTED);
         send_body(sockfd, NULL, 0);
