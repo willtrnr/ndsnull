@@ -18,9 +18,11 @@ int http_request(const char* method, const char* host, const char* request, cons
         return 0;
     }
 
-    if (setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
-        iprintf("[!] Could not set nodelay option!");
-    }
+    #ifdef TCP_NODELAY
+        if (setsockopt(sockfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set nodelay option!");
+        }
+    #endif
 
     #ifdef TCP_CORK
         if (setsockopt(sockfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {

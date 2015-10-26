@@ -7,13 +7,17 @@ int http_server(int port) {
         return 1;
     }
 
-    if (setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
-        iprintf("[!] Could not set reuse option!");
-    }
+    #ifdef SO_REUSEADDR
+        if (setsockopt(servfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set reuse option!");
+        }
+    #endif
 
-    if (setsockopt(servfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
-        iprintf("[!] Could not set nodelay option!");
-    }
+    #ifdef TCP_NODELAY
+        if (setsockopt(servfd, SOL_TCP, TCP_NODELAY, &(int){ 1 }, sizeof(int)) < 0) {
+            iprintf("[!] Could not set nodelay option!");
+        }
+    #endif
 
     #ifdef TCP_CORK
         if (setsockopt(servfd, SOL_TCP, TCP_CORK, &(int){ 1 }, sizeof(int)) < 0) {
